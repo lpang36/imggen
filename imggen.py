@@ -41,7 +41,7 @@ def overlay(s_img,l_img,y_offset,x_offset):
 	else:
 		l_img[y_offset:(y_offset+s_img.shape[0]), x_offset:(x_offset+s_img.shape[1])] = s_img
 
-def make(n,foreground='foregrounds',background='backgrounds',out='images',data='data.csv',filetype='png',parameters={}):
+def make(n,foreground='foreground',background='background',out='images',data='data.csv',filetype='png',parameters={}):
 	def default(key): 
 		defaults = {
 			'reshape': True,

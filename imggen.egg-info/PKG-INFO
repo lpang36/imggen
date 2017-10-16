@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: imggen
+Version: 0.1
+Summary: A Python module to automatically generate images by overlaying foreground images on background images. Intended to facilitate training for computer vision algorithms.
+Home-page: UNKNOWN
+Author: Lawrence Pang
+Author-email: UNKNOWN
+License: UNKNOWN
+Description-Content-Type: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
