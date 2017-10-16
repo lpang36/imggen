@@ -1,10 +1,10 @@
-#Imggen#
+# Imggen #
 
-#Version 0.1#
+## Version 0.1 ##
 
 A Python module to automatically generate images by overlaying foreground images on background images. Intended to facilitate training for computer vision algorithms. 
 
-##Installation##
+## Installation ##
 
 Coming soon: 
 
@@ -12,7 +12,7 @@ Coming soon:
 
 This package has dependencies: numpy, cv2 (also known as opencv-python), and tqdm. 
 
-##Usage##
+## Usage ##
 
 To generate 10 images using default parameters: 
 
@@ -25,7 +25,7 @@ Currently, the make function is the only function in the module. By default, for
 
 For foreground images, the best effect is achieved with a transparent background. If rotation is permitted, bounding boxes may be inaccurate. 
 
-##Documentation##
+## Documentation ##
 
 The make function has the following parameters:
 
