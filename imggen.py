@@ -30,16 +30,16 @@ def path(*args):
 	thisdir = os.path.dirname(os.path.abspath(__file__))
 	return os.path.join(thisdir,*args)
 		
-def overlay(s_img,l_img,x_offset,y_offset):
+def overlay(s_img,l_img,y_offset,x_offset):
 	y1, y2 = y_offset, y_offset + s_img.shape[0]
 	x1, x2 = x_offset, x_offset + s_img.shape[1]
-	if s_image.shape[2]==4:
+	if s_img.shape[2]==4:
 		alpha_s = s_img[:, :, 3] / 255.0
 		alpha_l = 1.0 - alpha_s
 		for c in range(0, 3):
 			l_img[y1:y2, x1:x2, c] = (alpha_s * s_img[:, :, c] + alpha_l * l_img[y1:y2, x1:x2, c])
 	else:
-		l_img[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
+		l_img[y_offset:(y_offset+s_img.shape[0]), x_offset:(x_offset+s_img.shape[1])] = s_img
 
 def make(n,foreground='foregrounds',background='backgrounds',out='images',data='data.csv',filetype='png',parameters={}):
 	def default(key): 
@@ -66,7 +66,9 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 	params = keydefaultdict(default,parameters)
 	if not os.path.isdir(path(out)):
 		os.makedirs(path(out))
-	with os.fdopen(os.open(path(out,data),os.O_CREAT)) as csvfile:
+	if not os.path.isfile(path(out,data)):
+		os.open(path(out,data),os.O_CREAT)
+	with open(path(out,data),'w') as csvfile:
 		filewriter = csv.writer(csvfile)
 		for i in range(0,n):
 			num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
@@ -77,7 +79,7 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 				fgpath = random.choice(os.listdir(path(foreground)))
 				fgpaths.append(fgpath)
 				fgs.append(cv2.imread(path(foreground,fgpath),-1))
-			bgpath = random.choice(os.listdir(path(foreground)))
+			bgpath = random.choice(os.listdir(path(background)))
 			row.append(bgpath)
 			bg = cv2.imread(path(background,bgpath),-1)
 			bgwidth,bgheight,_ = np.shape(bg)
@@ -87,7 +89,7 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 				if params['reshape']:
 					xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
 					ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-					cv2.resize(fg,0,fg,xsize,ysize)
+					fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
 					fgwidth,fgheight,_ = np.shape(fg)
 				if params['rotate']:
 					angle = random.randint(0,4)
@@ -104,18 +106,26 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 					bias = random.uniform(params['bias_limits'][0],params['bias_limits'][1])
 					fg = fg+bias
 				if params['blur'] and not params['blur_both']:
-					cv2.blur(fg,random.randint(0,params['blur_max']))
+					blur_lvl = random.randint(0,(params['blur_max']))
+					if blur_lvl>0:
+						fg = cv2.blur(fg,(blur_lvl,blur_lvl))
 				if params['noise'] and not params['noise_both']:
 					fg = noise(fg,params['prob'])
+				fitsize = min((bgwidth+0.0)/fgwidth,(bgheight+0.0)/fgheight)
+				if fitsize[0]<1:
+					fg = cv2.resize(fg,(0,0),fg,fitsize[0],fitsize[0])
+				fgwidth,fgheight,_ = np.shape(fg)
 				x_offset = random.randint(0,bgwidth-fgwidth)
 				y_offset = random.randint(0,bgheight-fgheight)
 				overlay(fg,bg,x_offset,y_offset)
-				row.append([fgpath[count],x_offset,y_offset,fgwidth,fgheight])
+				row.append([fgpaths[count],x_offset,y_offset,fgwidth,fgheight])
 				count = count+1
 			if params['blur_both']:
-				cv2.blur(bg,random.randint(0,params['blur_max']))
+				blur_lvl = random.randint(0,(params['blur_max']))
+				if blur_lvl>0:
+					cv2.blur(bg,(blur_lvl,blur_lvl))
 			if params['noise_both']:
 				bg = noise(bg,params['prob'])
 			imshow('output',bg)
-			imwrite(path(out,i+'.'+filetype,bg))
+			imwrite(path(out,str(i)+'.'+filetype),bg)
 			filewriter.writerow(row)
