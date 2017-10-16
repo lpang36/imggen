@@ -45,22 +45,24 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 	def default(key): 
 		defaults = {
 			'reshape': True,
-			'reshape_x_limits': (0.5,2),
-			'reshape_y_limits': (0.5,2),
+			'reshape_x_limits': (0.25,4),
+			'reshape_y_limits': (0.25,4),
 			'rotate': True,
+			'rotate_limits': (0,360),
+			'rotate_increment': 90,
 			'flip': True,
 			'max_foregrounds': 1,
 			'min_foregrounds': 1,
 			'brightness': True,
 			'contrast': True,
-			'gain_limits': (0.5,2),
-			'bias_limits': (-50,50),
+			'gain_limits': (0.75,1.25),
+			'bias_limits': (-10,10),
 			'blur': True,
 			'blur_both': False,
-			'blur_max': 10,
+			'blur_max': 0.05,
 			'noise': True,
 			'noise_both': False,
-			'prob': 0.01,
+			'prob': 0.1,
 		}
 		return defaults[key]
 	params = keydefaultdict(default,parameters)
@@ -92,7 +94,7 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 					fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
 					fgwidth,fgheight,_ = np.shape(fg)
 				if params['rotate']:
-					angle = random.randint(0,4)
+					angle = random.randint(params['rotate_limits'][0],params['rotate_limits'][1])/params['rotate_increment']*params['rotate_increment']
 					M = cv2.getRotationMatrix2D((fgheight/2,fgwidth/2),angle,1)
 					fg = cv2.warpAffine(fg,M,(fgheight,fgwidth))
 					fgwidth,fgheight,_ = np.shape(fg)
@@ -101,12 +103,12 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 						cv2.flip(fg,fg)
 				if params['brightness']:
 					gain = random.uniform(params['gain_limits'][0],params['gain_limits'][1])
-					fg = fg*gain
+					fg[:,:,:3] = fg[:,:,:3]*gain
 				if params['contrast']:
 					bias = random.uniform(params['bias_limits'][0],params['bias_limits'][1])
-					fg = fg+bias
+					fg[:,:,:3] = fg[:,:,:3]+bias
 				if params['blur'] and not params['blur_both']:
-					blur_lvl = random.randint(0,(params['blur_max']))
+					blur_lvl = random.randint(0,int(params['blur_max']*min(fgwidth,fgheight)[0])+1)
 					if blur_lvl>0:
 						fg = cv2.blur(fg,(blur_lvl,blur_lvl))
 				if params['noise'] and not params['noise_both']:
@@ -121,7 +123,7 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 				row.append([fgpaths[count],x_offset,y_offset,fgwidth,fgheight])
 				count = count+1
 			if params['blur_both']:
-				blur_lvl = random.randint(0,(params['blur_max']))
+				blur_lvl = random.randint(0,int(params['blur_max']*min(bgwidth,bgheight)[0])+1)
 				if blur_lvl>0:
 					cv2.blur(bg,(blur_lvl,blur_lvl))
 			if params['noise_both']:
