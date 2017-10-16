@@ -5,30 +5,30 @@ import os, random
 import csv
 
 class keydefaultdict(defaultdict):
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError( key )
-        else:
-            ret = self[key] = self.default_factory(key)
-            return ret
+	def __missing__(self, key):
+		if self.default_factory is None:
+			raise KeyError( key )
+		else:
+			ret = self[key] = self.default_factory(key)
+			return ret
 
 def noise(image,prob):
 	output = np.zeros(image.shape,np.uint8)
-    thres = 1 - prob 
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            rdn = random.random()
-            if rdn < prob:
-                output[i][j] = 0
-            elif rdn > thres:
-                output[i][j] = 255
-            else:
-                output[i][j] = image[i][j]
-    return output
+	thres = 1 - prob 
+	for i in range(image.shape[0]):
+		for j in range(image.shape[1]):
+			rdn = random.random()
+			if rdn < prob:
+				output[i][j] = 0
+			elif rdn > thres:
+				output[i][j] = 255
+			else:
+				output[i][j] = image[i][j]
+	return output
 
 def path(*args):
 	thisdir = os.path.dirname(os.path.abspath(__file__))
-	return os.path.join(thisdir,args)
+	return os.path.join(thisdir,*args)
 		
 def overlay(s_img,l_img,x_offset,y_offset):
 	y1, y2 = y_offset, y_offset + s_img.shape[0]
@@ -41,57 +41,59 @@ def overlay(s_img,l_img,x_offset,y_offset):
 	else:
 		l_img[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
 
-def make(n,foreground='/foregrounds',background='/backgrounds',out='/images',data='data.csv',type='png',parameters=None):
-	default = {
-		'reshape': True,
-		'reshape_x_limits': (0.5,2)
-		'reshape_y_limits': (0.5,2)
-		'rotate': True,
-		'flip': True,
-		'max_foregrounds': 1,
-		'min_foregrounds': 1,
-		'brightness': True,
-		'contrast': True,
-		'gain_limits': (0.5,2),
-		'bias_limits': (-50,50),
-		'blur': True,
-		'blur_both': False,
-		'blur_max': 10,
-		'noise': True,
-		'noise_both': False,
-		'prob': 0.01,
-	}
+def make(n,foreground='foregrounds',background='backgrounds',out='images',data='data.csv',filetype='png',parameters={}):
+	def default(key): 
+		defaults = {
+			'reshape': True,
+			'reshape_x_limits': (0.5,2),
+			'reshape_y_limits': (0.5,2),
+			'rotate': True,
+			'flip': True,
+			'max_foregrounds': 1,
+			'min_foregrounds': 1,
+			'brightness': True,
+			'contrast': True,
+			'gain_limits': (0.5,2),
+			'bias_limits': (-50,50),
+			'blur': True,
+			'blur_both': False,
+			'blur_max': 10,
+			'noise': True,
+			'noise_both': False,
+			'prob': 0.01,
+		}
+		return defaults[key]
 	params = keydefaultdict(default,parameters)
 	if not os.path.isdir(path(out)):
 		os.makedirs(path(out))
-	with open(path(out,data)) as csvfile:
+	with os.fdopen(os.open(path(out,data),os.O_CREAT)) as csvfile:
 		filewriter = csv.writer(csvfile)
 		for i in range(0,n):
-			int num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
+			num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
 			row = [i,]
 			fgs = []
 			fgpaths = []
 			for j in range(0,num_foregrounds):
 				fgpath = random.choice(os.listdir(path(foreground)))
 				fgpaths.append(fgpath)
-				fgs.append(cv2.imread(fgpath),-1)
+				fgs.append(cv2.imread(path(foreground,fgpath),-1))
 			bgpath = random.choice(os.listdir(path(foreground)))
 			row.append(bgpath)
-			bg = cv2.imread((bgpath),-1)
-			bgwidth,bgheight = cv2.GetSize(bg)
+			bg = cv2.imread(path(background,bgpath),-1)
+			bgwidth,bgheight,_ = np.shape(bg)
 			count = 0
 			for fg in fgs: 
-				fgwidth,fgheight = cv2.GetSize(fg)
+				fgwidth,fgheight,_ = np.shape(fg)
 				if params['reshape']:
 					xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
 					ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-					cv2.resize(fg,fg,fx=xsize,fy=ysize)
-					fgwidth,fgheight = cv2.GetSize(fg)
+					cv2.resize(fg,0,fg,xsize,ysize)
+					fgwidth,fgheight,_ = np.shape(fg)
 				if params['rotate']:
 					angle = random.randint(0,4)
 					M = cv2.getRotationMatrix2D((fgheight/2,fgwidth/2),angle,1)
-					fg = cv2.warpAffine(,M,(fgheight,fgwidth))
-					fgwidth,fgheight = cv2.GetSize(fg)
+					fg = cv2.warpAffine(fg,M,(fgheight,fgwidth))
+					fgwidth,fgheight,_ = np.shape(fg)
 				if params['flip']:
 					if random.random<0.5:
 						cv2.flip(fg,fg)
@@ -115,5 +117,5 @@ def make(n,foreground='/foregrounds',background='/backgrounds',out='/images',dat
 			if params['noise_both']:
 				bg = noise(bg,params['prob'])
 			imshow('output',bg)
-			imwrite(path(out,i+'.png',bg))
+			imwrite(path(out,i+'.'+filetype,bg))
 			filewriter.writerow(row)
