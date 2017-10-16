@@ -1,8 +1,8 @@
 import numpy as np
 from cv2 import *
 from collections import defaultdict
-import os, random
-import csv
+import os, random, csv
+from tqdm import tqdm
 
 class keydefaultdict(defaultdict):
 	def __missing__(self, key):
@@ -67,12 +67,15 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 		return defaults[key]
 	params = keydefaultdict(default,parameters)
 	if not os.path.isdir(path(out)):
+		print('Creating output folder at '+path(out)+'.')
 		os.makedirs(path(out))
 	if not os.path.isfile(path(out,data)):
+		print('Creating output csv file at '+path(out,data)+'.')
 		os.open(path(out,data),os.O_CREAT)
+	print('Generating images...')
 	with open(path(out,data),'w') as csvfile:
 		filewriter = csv.writer(csvfile)
-		for i in range(0,n):
+		for i in tqdm(range(0,n)):
 			num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
 			row = [i,]
 			fgs = []
@@ -131,3 +134,4 @@ def make(n,foreground='foregrounds',background='backgrounds',out='images',data='
 			imshow('output',bg)
 			imwrite(path(out,str(i)+'.'+filetype),bg)
 			filewriter.writerow(row)
+	print('Done.')
