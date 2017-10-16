@@ -2,6 +2,7 @@ import numpy as np
 from cv2 import *
 from collections import defaultdict
 import os, random
+import csv
 
 class keydefaultdict(defaultdict):
     def __missing__(self, key):
@@ -63,41 +64,56 @@ def make(n,foreground='/foregrounds',background='/backgrounds',out='/images',dat
 	params = keydefaultdict(default,parameters)
 	if not os.path.isdir(path(out)):
 		os.makedirs(path(out))
-	for i in range(0,n):
-		int num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
-		fgs = []
-		for i in range(0,num_foregrounds):
-			fgs.append(cv2.imread(random.choice(os.listdir(path(foreground))),-1))
-		bg = cv2.imread(random.choice(os.listdir(path(foreground))),-1)
-		bgwidth,bgheight = cv2.GetSize(bg)
-		for fg in fgs: 
-			fgwidth,fgheight = cv2.GetSize(fg)
-			if params['reshape']:
-				xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-				ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-				cv2.resize(fg,fg,fx=xsize,fy=ysize)
-			if params['rotate']:
-				angle = random.randint(0,4)
-				M = cv2.getRotationMatrix2D((fgheight/2,fgwidth/2),angle,1)
-				fg = cv2.warpAffine(,M,(fgheight,fgwidth))
-			if params['flip']:
-				if random.random<0.5:
-					cv2.flip(fg,fg)
-			if params['brightness']:
-				gain = random.uniform(params['gain_limits'][0],params['gain_limits'][1])
-				fg = fg*gain
-			if params['contrast']:
-				bias = random.uniform(params['bias_limits'][0],params['bias_limits'][1])
-				fg = fg+bias
-			if params['blur'] and not params['blur_both']:
-				cv2.blur(fg,random.randint(0,params['blur_max']))
-			if params['noise'] and not params['noise_both']:
-				fg = noise(fg,params['prob'])
-			x_offset = random.randint(0,bgwidth-fgwidth)
-			y_offset = random.randint(0,bgheight-fgheight)
-			overlay(fg,bg,x_offset,y_offset)	
-		if params['blur_both']:
-			cv2.blur(bg,random.randint(0,params['blur_max']))
-		if params['noise_both']:
-			bg = noise(bg,params['prob'])
-		imwrite(path(out,i+'.png',bg))
+	with open(path(out,data)) as csvfile:
+		filewriter = csv.writer(csvfile)
+		for i in range(0,n):
+			int num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
+			row = [i,]
+			fgs = []
+			fgpaths = []
+			for j in range(0,num_foregrounds):
+				fgpath = random.choice(os.listdir(path(foreground)))
+				fgpaths.append(fgpath)
+				fgs.append(cv2.imread(fgpath),-1)
+			bgpath = random.choice(os.listdir(path(foreground)))
+			row.append(bgpath)
+			bg = cv2.imread((bgpath),-1)
+			bgwidth,bgheight = cv2.GetSize(bg)
+			count = 0
+			for fg in fgs: 
+				fgwidth,fgheight = cv2.GetSize(fg)
+				if params['reshape']:
+					xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
+					ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
+					cv2.resize(fg,fg,fx=xsize,fy=ysize)
+					fgwidth,fgheight = cv2.GetSize(fg)
+				if params['rotate']:
+					angle = random.randint(0,4)
+					M = cv2.getRotationMatrix2D((fgheight/2,fgwidth/2),angle,1)
+					fg = cv2.warpAffine(,M,(fgheight,fgwidth))
+					fgwidth,fgheight = cv2.GetSize(fg)
+				if params['flip']:
+					if random.random<0.5:
+						cv2.flip(fg,fg)
+				if params['brightness']:
+					gain = random.uniform(params['gain_limits'][0],params['gain_limits'][1])
+					fg = fg*gain
+				if params['contrast']:
+					bias = random.uniform(params['bias_limits'][0],params['bias_limits'][1])
+					fg = fg+bias
+				if params['blur'] and not params['blur_both']:
+					cv2.blur(fg,random.randint(0,params['blur_max']))
+				if params['noise'] and not params['noise_both']:
+					fg = noise(fg,params['prob'])
+				x_offset = random.randint(0,bgwidth-fgwidth)
+				y_offset = random.randint(0,bgheight-fgheight)
+				overlay(fg,bg,x_offset,y_offset)
+				row.append([fgpath[count],x_offset,y_offset,fgwidth,fgheight])
+				count = count+1
+			if params['blur_both']:
+				cv2.blur(bg,random.randint(0,params['blur_max']))
+			if params['noise_both']:
+				bg = noise(bg,params['prob'])
+			imshow('output',bg)
+			imwrite(path(out,i+'.png',bg))
+			filewriter.writerow(row)
