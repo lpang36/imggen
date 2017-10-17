@@ -4,6 +4,7 @@ from collections import defaultdict
 import os, random, csv
 from tqdm import tqdm
 
+#custom dictionary class
 class keydefaultdict(defaultdict):
 	def __missing__(self, key):
 		if self.default_factory is None:
@@ -12,6 +13,7 @@ class keydefaultdict(defaultdict):
 			ret = self[key] = self.default_factory(key)
 			return ret
 
+#salt and pepper noise
 def noise(image,prob):
 	output = np.zeros(image.shape,np.uint8)
 	thres = 1 - prob 
@@ -26,13 +28,16 @@ def noise(image,prob):
 				output[i][j] = image[i][j]
 	return output
 
+#return local path
 def path(*args):
 	thisdir = os.path.dirname(os.path.abspath(__file__))
 	return os.path.join(thisdir,*args)
 		
+#overlay one image on another
 def overlay(s_img,l_img,y_offset,x_offset):
 	y1, y2 = y_offset, y_offset + s_img.shape[0]
 	x1, x2 = x_offset, x_offset + s_img.shape[1]
+	#account for alpha channel
 	if s_img.shape[2]==4:
 		alpha_s = s_img[:, :, 3] / 255.0
 		alpha_l = 1.0 - alpha_s
@@ -41,7 +46,9 @@ def overlay(s_img,l_img,y_offset,x_offset):
 	else:
 		l_img[y_offset:(y_offset+s_img.shape[0]), x_offset:(x_offset+s_img.shape[1])] = s_img
 
+#generate images
 def make(n,foreground='foreground',background='background',out='images',data='data.csv',filetype='png',parameters={}):
+	#default parameters
 	def default(key): 
 		defaults = {
 			'reshape': True,
@@ -75,11 +82,13 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 	print('Generating images...')
 	with open(path(out,data),'w') as csvfile:
 		filewriter = csv.writer(csvfile)
+		#pretty print loop
 		for i in tqdm(range(0,n)):
 			num_foregrounds = random.randint(params['min_foregrounds'],params['max_foregrounds'])
 			row = [i,]
 			fgs = []
 			fgpaths = []
+			#randomly select foregrounds, backgrounds
 			for j in range(0,num_foregrounds):
 				fgpath = random.choice(os.listdir(path(foreground)))
 				fgpaths.append(fgpath)
@@ -89,6 +98,7 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 			bg = cv2.imread(path(background,bgpath),-1)
 			bgwidth,bgheight,_ = np.shape(bg)
 			count = 0
+			#alter image
 			for fg in fgs: 
 				fgwidth,fgheight,_ = np.shape(fg)
 				if params['reshape']:
@@ -123,6 +133,7 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 				fgwidth,fgheight,_ = np.shape(fg)
 				x_offset = random.randint(0,bgwidth-fgwidth)
 				y_offset = random.randint(0,bgheight-fgheight)
+				#compose image
 				overlay(fg,bg,x_offset,y_offset)
 				row.append([fgpaths[count],x_offset,y_offset,fgwidth,fgheight])
 				count = count+1
@@ -133,6 +144,7 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 			if params['noise_both']:
 				noise_prob = random.uniform(0,params['prob'])
 				bg = noise(bg,noise_prob)
+			#write to output
 			imshow('output',bg)
 			imwrite(path(out,str(i)+'.'+filetype),bg)
 			filewriter.writerow(row)
