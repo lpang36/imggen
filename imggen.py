@@ -115,7 +115,8 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 					if blur_lvl>0:
 						fg = cv2.blur(fg,(blur_lvl,blur_lvl))
 				if params['noise'] and not params['noise_both']:
-					fg = noise(fg,params['prob'])
+					noise_prob = random.uniform(0,params['prob'])
+					fg = noise(fg,noise_prob)
 				fitsize = min((bgwidth+0.0)/fgwidth,(bgheight+0.0)/fgheight)
 				if fitsize[0]<1:
 					fg = cv2.resize(fg,(0,0),fg,fitsize[0],fitsize[0])
@@ -130,7 +131,8 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 				if blur_lvl>0:
 					cv2.blur(bg,(blur_lvl,blur_lvl))
 			if params['noise_both']:
-				bg = noise(bg,params['prob'])
+				noise_prob = random.uniform(0,params['prob'])
+				bg = noise(bg,noise_prob)
 			imshow('output',bg)
 			imwrite(path(out,str(i)+'.'+filetype),bg)
 			filewriter.writerow(row)
