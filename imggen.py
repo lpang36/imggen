@@ -112,9 +112,9 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 					if params['reshape_mode'] is 'foreground':
 						fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
 					elif params['reshape_mode'] is 'background':
-						fg = cv2.resize(fg,(xsize*bgwidth,ysize*bgheight),fg)
+						fg = cv2.resize(fg,(int(xsize*bgwidth),int(ysize*bgheight)),fg)
 					elif params['reshape_mode'] is 'absolute':
-						fg = cv2.resize(fg,(xsize,ysize),fg)
+						fg = cv2.resize(fg,(int(xsize),int(ysize)),fg)
 					fgwidth,fgheight,_ = np.shape(fg)
 				if params['rotate']:
 					angle = random.randint(params['rotate_limits'][0],params['rotate_limits'][1])/params['rotate_increment']*params['rotate_increment']

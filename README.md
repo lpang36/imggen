@@ -55,11 +55,17 @@ These keys are recognized by the parameters dictionary:
 * reshape
   * Boolean value for whether the foreground image can be resized. Defaults to True.
 
+* maintain\_aspect
+  * Boolean value for whether the aspect ratio of the image should be kept constant. Defaults to False. If this value is True, reshape range is taken from reshape\_x\_limits, and reshape\_y\_limits is ignored.
+
+* reshape\_mode
+  * Defines behaviour of reshape\_x\_limits and reshape\_y\_limits. If set to 'foreground', reshape\_x\_limits and reshape\_y\_limits will be a ratio relative to the size of the foreground image. If set to 'background', they will be a ratio relative to the size of the background image. If set to 'absolute', they will be absolute pixel size values. Defaults to 'foreground'.
+
 * reshape\_x\_limits
-  * Tuple in the format (lower\_bound, upper\_bound). Ratio for resizing of x dimension will be randomly chosen from between these values. Defaults to (0.25, 4).
+  * Tuple in the format (lower\_bound, upper\_bound). Resizing of x dimension will be randomly chosen from between these values. Defaults to (0.25, 4).
 
 * reshape\_y\_limits
-  * Tuple in the format (lower\_bound, upper\_bound). Ratio for resizing of y dimension will be randomly chosen from between these values. Defaults to (0.25, 4).
+  * Tuple in the format (lower\_bound, upper\_bound). Resizing of y dimension will be randomly chosen from between these values. Defaults to (0.25, 4).
 
 * rotate
   * Boolean value for whether the foreground image can be rotated. Defaults to True.
