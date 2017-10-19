@@ -52,6 +52,8 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 	def default(key): 
 		defaults = {
 			'reshape': True,
+			'maintain_aspect': False,
+			'reshape_mode': 'foreground',
 			'reshape_x_limits': (0.25,4),
 			'reshape_y_limits': (0.25,4),
 			'rotate': True,
@@ -103,8 +105,16 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 				fgwidth,fgheight,_ = np.shape(fg)
 				if params['reshape']:
 					xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-					ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
-					fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
+					if params['maintain_aspect']:
+						ysize = xsize
+					else:
+						ysize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
+					if params['reshape_mode'] is 'foreground':
+						fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
+					elif params['reshape_mode'] is 'background':
+						fg = cv2.resize(fg,(xsize*bgwidth,ysize*bgheight),fg)
+					elif params['reshape_mode'] is 'absolute':
+						fg = cv2.resize(fg,(xsize,ysize),fg)
 					fgwidth,fgheight,_ = np.shape(fg)
 				if params['rotate']:
 					angle = random.randint(params['rotate_limits'][0],params['rotate_limits'][1])/params['rotate_increment']*params['rotate_increment']
