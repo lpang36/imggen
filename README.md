@@ -106,10 +106,10 @@ These keys are recognized by the parameters dictionary:
 * blur_max
   * Maximum filter size of the blur, as a ratio of image size. Uses OpenCV's blur function. Defaults to 0.05.
 
-* blur
+* noise
   * Boolean value for whether salt-and-pepper noise can be applied to the foreground. Defaults to True.
 
-* blur\_both
+* noise\_both
   * Boolean value for whether both background and foreground can be noised. Defaults to False.
 
 * prob
@@ -120,8 +120,8 @@ These keys are recognized by the parameters dictionary:
 
 The output csv file is in the following format (headers not actually present): 
 
-| Index | Background image name | Foreground image 1 | Foreground image 2 | ...
-| --- | --- | --- |
-| 0 | background1.jpg | \[person.png, 5, 10, 245, 238\] |
+| Index | Background image name | Foreground image 1 | Foreground image 2 | ... |
+| --- | --- | --- | --- | --- |
+| 0 | background1.jpg | \[person.png, 5, 10, 245, 238\] | \[goose.png, 23, 75, 57, 21\] | ... |
 
 In general, a foreground image cell will contain a list in the format \[image\_name, x\_offset, y\_offset, width, height\].
