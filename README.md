@@ -114,3 +114,14 @@ These keys are recognized by the parameters dictionary:
 
 * prob
   * Probability of a pixel in the image being noised. Defaults to 0.1.
+
+* target\_size
+  * Tuple containing fixed output size of image, in the format (x, y), or None. If None, output image size will vary. Defaults to None.
+
+The output csv file is in the following format (headers not actually present): 
+
+| Index | Background image name | Foreground image 1 | Foreground image 2 | ...
+| --- | --- | --- |
+| 0 | background1.jpg | \[person.png, 5, 10, 245, 238\] |
+
+In general, a foreground image cell will contain a list in the format \[image\_name, x\_offset, y\_offset, width, height\].

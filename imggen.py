@@ -72,6 +72,7 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 			'noise': True,
 			'noise_both': False,
 			'prob': 0.1,
+			'target_size': None,
 		}
 		return defaults[key]
 	params = keydefaultdict(default,parameters)
@@ -155,7 +156,13 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 				noise_prob = random.uniform(0,params['prob'])
 				bg = noise(bg,noise_prob)
 			#write to output
-			imshow('output',bg)
+			if params['target_size'] is not None:
+				for cell in row[2:]:
+					cell[1] = int(cell[1]*params['target_size'][0]/(bgwidth+0.0))
+					cell[2] = int(cell[2]*params['target_size'][1]/(bgheight+0.0))
+					cell[3] = int(cell[3]*params['target_size'][0]/(bgwidth+0.0))
+					cell[4] = int(cell[4]*params['target_size'][1]/(bgheight+0.0))
+				bg = cv2.resize(bg,params['target_size'],bg)
 			imwrite(path(out,str(i)+'.'+filetype),bg)
 			filewriter.writerow(row)
 	print('Done.')
