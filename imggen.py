@@ -99,11 +99,11 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 			bgpath = random.choice(os.listdir(path(background)))
 			row.append(bgpath)
 			bg = cv2.imread(path(background,bgpath),-1)
-			bgwidth,bgheight,_ = np.shape(bg)
+			bgheight,bgwidth,_ = np.shape(bg)
 			count = 0
 			#alter image
 			for fg in fgs: 
-				fgwidth,fgheight,_ = np.shape(fg)
+				fgheight,fgwidth,_ = np.shape(fg)
 				if params['reshape']:
 					xsize = random.uniform(params['reshape_x_limits'][0],params['reshape_x_limits'][1])
 					if params['maintain_aspect']:
@@ -113,15 +113,15 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 					if params['reshape_mode'] is 'foreground':
 						fg = cv2.resize(fg,(0,0),fg,xsize,ysize)
 					elif params['reshape_mode'] is 'background':
-						fg = cv2.resize(fg,(int(xsize*bgwidth),int(ysize*bgheight)),fg)
+						fg = cv2.resize(fg,(int(xsize*bgheight),int(ysize*bgwidth)),fg)
 					elif params['reshape_mode'] is 'absolute':
 						fg = cv2.resize(fg,(int(xsize),int(ysize)),fg)
-					fgwidth,fgheight,_ = np.shape(fg)
+					fgheight,fgwidth,_ = np.shape(fg)
 				if params['rotate']:
 					angle = random.randint(params['rotate_limits'][0],params['rotate_limits'][1])/params['rotate_increment']*params['rotate_increment']
-					M = cv2.getRotationMatrix2D((fgheight/2,fgwidth/2),angle,1)
-					fg = cv2.warpAffine(fg,M,(fgheight,fgwidth))
-					fgwidth,fgheight,_ = np.shape(fg)
+					M = cv2.getRotationMatrix2D((fgwidth/2,fgheight/2),angle,1)
+					fg = cv2.warpAffine(fg,M,(fgwidth,fgheight))
+					fgheight,fgwidth,_ = np.shape(fg)
 				if params['flip']:
 					if random.random<0.5:
 						cv2.flip(fg,fg)
@@ -132,24 +132,24 @@ def make(n,foreground='foreground',background='background',out='images',data='da
 					bias = random.uniform(params['bias_limits'][0],params['bias_limits'][1])
 					fg[:,:,:3] = fg[:,:,:3]+bias
 				if params['blur'] and not params['blur_both']:
-					blur_lvl = random.randint(0,int(params['blur_max']*min(fgwidth,fgheight)[0])+1)
+					blur_lvl = random.randint(0,int(params['blur_max']*min(fgheight,fgwidth)[0])+1)
 					if blur_lvl>0:
 						fg = cv2.blur(fg,(blur_lvl,blur_lvl))
 				if params['noise'] and not params['noise_both']:
 					noise_prob = random.uniform(0,params['prob'])
 					fg = noise(fg,noise_prob)
-				fitsize = min((bgwidth+0.0)/fgwidth,(bgheight+0.0)/fgheight)
+				fitsize = min((bgheight+0.0)/fgheight,(bgwidth+0.0)/fgwidth)
 				if fitsize[0]<1:
 					fg = cv2.resize(fg,(0,0),fg,fitsize[0],fitsize[0])
-				fgwidth,fgheight,_ = np.shape(fg)
-				x_offset = random.randint(0,bgwidth-fgwidth)
+				fgheight,fgwidth,_ = np.shape(fg)
 				y_offset = random.randint(0,bgheight-fgheight)
+				x_offset = random.randint(0,bgwidth-fgwidth)
 				#compose image
-				overlay(fg,bg,x_offset,y_offset)
-				row.append([fgpaths[count],x_offset,y_offset,fgwidth,fgheight])
+				overlay(fg,bg,y_offset,x_offset)
+				row.append([fgpaths[count],x_offset,y_offset,fgheight,fgwidth])
 				count = count+1
 			if params['blur_both']:
-				blur_lvl = random.randint(0,int(params['blur_max']*min(bgwidth,bgheight)[0])+1)
+				blur_lvl = random.randint(0,int(params['blur_max']*min(bgheight,bgwidth)[0])+1)
 				if blur_lvl>0:
 					cv2.blur(bg,(blur_lvl,blur_lvl))
 			if params['noise_both']:
